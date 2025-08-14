@@ -7,7 +7,6 @@ const outerContainerStyle = {
   alignItems: "center",
   justifyContent: "center",
   background: "#f3fbf3",
-  padding: "32px 8px",
 };
 
 const cardStyle = {

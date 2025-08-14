@@ -52,6 +52,154 @@ const cardNumberStyle = { fontSize: '48px', fontWeight: '700', color: '#6AB320',
 const cardTitleStyle = { fontSize: '18px', fontWeight: '600', color: '#222', margin: '0 0 8px 0' };
 const cardDescriptionStyle = { fontSize: '14px', color: '#666', margin: '0', lineHeight: '1.4' };
 
+const Modal = ({ open, onClose, messageType, message, onClose: handleClose }) => {
+  if (!open) return null;
+  
+  const getIcon = () => {
+    if (messageType === 'success') {
+      return (
+        <div style={{
+          width: 60,
+          height: 60,
+          borderRadius: '50%',
+          background: '#e8f5e8',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          margin: '0 auto 20px',
+          border: '3px solid #4caf50'
+        }}>
+          <span style={{ fontSize: 32, color: '#4caf50' }}>✓</span>
+        </div>
+      );
+    } else if (messageType === 'error') {
+      return (
+        <div style={{
+          width: 60,
+          height: 60,
+          borderRadius: '50%',
+          background: '#ffebee',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          margin: '0 auto 20px',
+          border: '3px solid #f44336'
+        }}>
+          <span style={{ fontSize: 32, color: '#f44336' }}>✕</span>
+        </div>
+      );
+    }
+    return (
+      <div style={{
+        width: 60,
+        height: 60,
+        borderRadius: '50%',
+        background: '#e3f2fd',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        margin: '0 auto 20px',
+        border: '3px solid #2196f3'
+      }}>
+        <span style={{ fontSize: 32, color: '#2196f3' }}>ℹ</span>
+      </div>
+    );
+  };
+
+  const getTitle = () => {
+    if (messageType === 'success') return 'Success!';
+    if (messageType === 'error') return 'Error';
+    return 'Information';
+  };
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0, left: 0, right: 0, bottom: 0,
+      background: 'rgba(0,0,0,0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 9999,
+      backdropFilter: 'blur(4px)'
+    }}>
+      <div style={{
+        background: '#fff',
+        borderRadius: 16,
+        padding: '40px 32px',
+        minWidth: 380,
+        maxWidth: 480,
+        boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
+        textAlign: 'center',
+        position: 'relative',
+        animation: 'modalSlideIn 0.3s ease-out',
+        border: '1px solid rgba(0,0,0,0.1)'
+      }}>
+        {getIcon()}
+        
+        <h3 style={{
+          fontSize: '24px',
+          fontWeight: '700',
+          color: '#222',
+          margin: '0 0 16px 0',
+          textAlign: 'center'
+        }}>
+          {getTitle()}
+        </h3>
+        
+        <p style={{
+          fontSize: '16px',
+          color: messageType === 'success' ? '#2e7d32' : messageType === 'error' ? '#d32f2f' : '#555',
+          margin: '0 0 32px 0',
+          lineHeight: '1.5',
+          textAlign: 'center'
+        }}>
+          {message}
+        </p>
+        
+        <button
+          style={{
+            background: messageType === 'success' ? '#4caf50' : messageType === 'error' ? '#f44336' : '#2196f3',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 12,
+            padding: '12px 32px',
+            fontSize: 16,
+            fontWeight: '600',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            minWidth: 120
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.transform = 'translateY(-2px)';
+            e.target.style.boxShadow = '0 8px 20px rgba(0,0,0,0.2)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = 'translateY(0)';
+            e.target.style.boxShadow = 'none';
+          }}
+          onClick={handleClose}
+        >
+          {messageType === 'success' ? 'Great!' : 'Close'}
+        </button>
+        
+        <style>{`
+          @keyframes modalSlideIn {
+            from {
+              opacity: 0;
+              transform: translateY(-20px) scale(0.95);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+            }
+          }
+        `}</style>
+      </div>
+    </div>
+  );
+};
+
 const Home = () => {
   const [coupon, setCoupon] = useState('');
   const [email, setEmail] = useState('');
@@ -59,6 +207,7 @@ const Home = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState(null);
   const [messageType, setMessageType] = useState('info');
+  const [modalOpen, setModalOpen] = useState(false);
 
   const [stats, setStats] = useState({
     todayRedemptions: 0,
@@ -71,7 +220,7 @@ const Home = () => {
       try {
         const todayData = await getRedemptionStats('today');
         const allTimeData = await getRedemptionStats('all');
-        console.log("todayData",todayData,allTimeData);
+        console.log("todayData", todayData, allTimeData);
 
 
         setStats({
@@ -156,23 +305,27 @@ const Home = () => {
               if (!coupon || !email) {
                 setMessageType('error');
                 setMessage('Please enter both coupon code and customer email.');
+                setModalOpen(true);
                 return;
               }
               try {
                 setIsSubmitting(true);
                 const res = await redeemCoupon(email, coupon);
+                console.log("res✔❤🌹🌹🌹✔", res);
                 if (res?.success) {
                   setMessageType('success');
-                  setMessage(res?.message || 'Coupon redeemed successfully.');
+                  setMessage('Great! Your coupon has been redeemed successfully!');
                   setCoupon('');
                   setEmail('');
                 } else {
                   setMessageType('error');
                   setMessage(res?.message || 'Failed to redeem coupon.');
                 }
+                setModalOpen(true);
               } catch (err) {
                 setMessageType('error');
                 setMessage(err?.message || 'Failed to redeem coupon.');
+                setModalOpen(true);
               } finally {
                 setIsSubmitting(false);
               }
@@ -181,23 +334,12 @@ const Home = () => {
             {isSubmitting ? 'Redeeming...' : 'Redeem'}
           </button>
 
-          {message && (
-            <div
-              style={{
-                marginTop: 8,
-                fontSize: 14,
-                color:
-                  messageType === 'success'
-                    ? '#2e7d32'
-                    : messageType === 'error'
-                    ? '#d32f2f'
-                    : '#555',
-                textAlign: 'center',
-              }}
-            >
-              {message}
-            </div>
-          )}
+          <Modal 
+            open={modalOpen} 
+            onClose={() => setModalOpen(false)}
+            messageType={messageType}
+            message={message}
+          />
         </div>
       </div>
 
