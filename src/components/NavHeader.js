@@ -10,6 +10,7 @@ import profileimage from "../assets/image/Profile.png";
 import notificationIcon from "../assets/image/Notification.png";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "./store/index.js";
+import { getRestaurantProfile } from "../services/authApi.js";
 
 
 const HeaderWrapper = styled(Stack)`
@@ -59,16 +60,33 @@ const ProfileImage = styled("img")`
 const NavHeader = () => {
   const { userInfo } = useUser();
   const navigate = useNavigate();
+  const [details, setDetails] = useState(null);
 
   const handleProfileClick = () => {
     console.log("Profile image clicked");
     navigate('/Profile');
   };
 
+  useEffect(() => {
+    const token = localStorage.getItem("userToken");
+    if (!token) return;
+    (async () => {
+      try {
+        const profile = await getRestaurantProfile();
+        if (profile?.success && profile?.restaurant) {
+          setDetails(profile.restaurant);
+        }
+      } catch (error) {
+        // ignore and keep userInfo null
+      }
+    })();
+  }, []);
+
+console.log("details", details);
   return (
     <HeaderWrapper direction="row">
       {/* <LogoImage src={logoImage} alt="Logo" onClick={()=>{navigate("/dashboard")}} /> */}
-      <h1>GreenSip Vendor</h1>
+      <h1>{details?.name}</h1>
       <UserIconWrapper>
         {/* <StyledImage src={notificationIcon} alt="notification" /> */}
         <Profile />
