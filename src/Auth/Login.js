@@ -11,6 +11,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
   const handleLogin = async (e) => {
@@ -69,7 +70,7 @@ const Login = () => {
           <div style={styles.inputWrapper}>
             <span style={styles.inputIcon}>🔒</span>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"} // 👈 Toggle here
               placeholder="Enter Password"
               style={styles.inputField}
               value={password}
@@ -77,7 +78,15 @@ const Login = () => {
               autoComplete="current-password"
               required
             />
+            {/* 👁️ Icon to toggle password */}
+            <span
+              onClick={() => setShowPassword(!showPassword)}
+              style={{ cursor: "pointer", fontSize: "1.1rem", color: "#64748b" }}
+            >
+              {showPassword ? "🙈" : "👁️"}
+            </span>
           </div>
+
           {error ? <div style={styles.errorText}>{error}</div> : null}
           <button type="submit" disabled={loading} style={styles.button}>
             {loading ? "Logging in..." : "Login"}
